@@ -1,0 +1,28 @@
+name: RSS Translate Notify
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install dependencies
+        run: pip install feedparser argostranslate
+
+      - name: Run script
+        env:
+          RSS_URLS: ${{ vars.RSS_URLS }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+        run: python rss_translate_notify.py
