@@ -27,7 +27,7 @@ jobs:
           python-version: 3.11
 
       - name: Install dependencies
-        run: pip install feedparser argostranslate
+        run: pip install feedparser argostranslate bs4
 
       - name: Run RSS Translate & Email
         env:
