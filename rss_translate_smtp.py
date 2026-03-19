@@ -3,8 +3,11 @@ import os
 import json
 import smtplib
 from email.mime.text import MIMEText
-from argostranslate.translate import get_installed_languages
 from bs4 import BeautifulSoup
+
+# ---------- Argos Translate ----------
+import argostranslate.package
+import argostranslate.translate
 
 # ---------- 配置 ----------
 SENDER_EMAIL = os.getenv("SMTP_USER")
@@ -16,7 +19,13 @@ RSS_URLS = [url.strip() for url in os.getenv("RSS_URLS", "").split(",") if url.s
 EMAIL_SUBJECT_PREFIX = "[RSS更新] "
 HISTORY_FILE = "processed.json"
 
-# ---------- HTML清理函数 ----------
+if not all([SENDER_EMAIL, SMTP_SERVER, SMTP_PASS]):
+    raise ValueError("请在 Secrets 中配置 SMTP_USER, SMTP_SERVER, SMTP_PASS")
+
+if not RSS_URLS:
+    raise ValueError("请在 Variables 中配置 RSS_URLS")
+
+# ---------- HTML清理 ----------
 def strip_html(text):
     if not text:
         return ""
@@ -29,14 +38,24 @@ if os.path.exists(HISTORY_FILE):
 else:
     history = set()
 
-# ---------- 初始化 Argos Translate ----------
-installed_languages = get_installed_languages()
-from_lang = next(lang for lang in installed_languages if lang.code == "en")
-to_lang = next(lang for lang in installed_languages if lang.code == "zh")
+# ---------- 安装并加载语言包 ----------
+lang_installed_flag = ".argos_lang_installed"
+if not os.path.exists(lang_installed_flag):
+    print("安装 en->zh 语言包...")
+    pkg_path = argostranslate.package.download_package("en", "zh")
+    argostranslate.package.install_from_path(pkg_path)
+    open(lang_installed_flag, "w").close()  # 创建标记文件
+
+installed_languages = argostranslate.translate.get_installed_languages()
+from_lang = next((l for l in installed_languages if l.code=="en"), None)
+to_lang = next((l for l in installed_languages if l.code=="zh"), None)
+if not from_lang or not to_lang:
+    raise RuntimeError("未找到 en->zh 语言包")
 translation = from_lang.get_translation(to_lang)
 
 # ---------- 处理 RSS ----------
 new_articles = []
+
 for rss_url in RSS_URLS:
     feed = feedparser.parse(rss_url)
     for entry in feed.entries:
@@ -51,10 +70,7 @@ for rss_url in RSS_URLS:
         else:
             content = getattr(entry, "summary", None) or getattr(entry, "description", None) or entry.title
 
-        # 清理 HTML
         content = strip_html(content)
-
-        # 翻译
         translated_content = translation.translate(content)
 
         new_articles.append({
@@ -67,7 +83,7 @@ for rss_url in RSS_URLS:
 # ---------- 保存历史 ----------
 json.dump(list(history), open(HISTORY_FILE, "w", encoding="utf-8"))
 
-# ---------- 聚合邮件 ----------
+# ---------- 发送邮件 ----------
 if new_articles:
     email_content = ""
     for art in new_articles:
