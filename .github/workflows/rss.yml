@@ -21,8 +21,12 @@ jobs:
       - name: Install dependencies
         run: pip install feedparser argostranslate
 
-      - name: Run script
+      - name: Run RSS Translate & Email
         env:
-          RSS_URLS: ${{ vars.RSS_URLS }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-        run: python rss_translate_notify.py
+          RSS_URLS: ${{ secrets.RSS_URLS }} #RSS地址逗号间隔
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+        run: python rss_translate_smtp.py
