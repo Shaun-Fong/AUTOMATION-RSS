@@ -38,20 +38,18 @@ if os.path.exists(HISTORY_FILE):
 else:
     history = set()
 
-# ---------- 安装并加载语言包 ----------
-lang_installed_flag = ".argos_lang_installed"
-if not os.path.exists(lang_installed_flag):
-    print("安装 en->zh 语言包...")
-    pkg_path = argostranslate.package.download_package("en", "zh")
-    argostranslate.package.install_from_path(pkg_path)
-    open(lang_installed_flag, "w").close()  # 创建标记文件
+from_code = "en"
+to_code = "zh"
 
-installed_languages = argostranslate.translate.get_installed_languages()
-from_lang = next((l for l in installed_languages if l.code=="en"), None)
-to_lang = next((l for l in installed_languages if l.code=="zh"), None)
-if not from_lang or not to_lang:
-    raise RuntimeError("未找到 en->zh 语言包")
-translation = from_lang.get_translation(to_lang)
+# Download and install Argos Translate package
+argostranslate.package.update_package_index()
+available_packages = argostranslate.package.get_available_packages()
+package_to_install = next(
+    filter(
+        lambda x: x.from_code == from_code and x.to_code == to_code, available_packages
+    )
+)
+argostranslate.package.install_from_path(package_to_install.download())
 
 # ---------- 处理 RSS ----------
 new_articles = []
@@ -71,7 +69,9 @@ for rss_url in RSS_URLS:
             content = getattr(entry, "summary", None) or getattr(entry, "description", None) or entry.title
 
         content = strip_html(content)
-        translated_content = translation.translate(content)
+        
+        # Translate
+        translated_content = argostranslate.translate.translate(content, from_code, to_code)
 
         new_articles.append({
             "title": title,
