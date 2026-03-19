@@ -25,6 +25,21 @@ if not all([SENDER_EMAIL, SMTP_SERVER, SMTP_PASS]):
 if not RSS_URLS:
     raise ValueError("请在 Variables 中配置 RSS_URLS")
 
+def translate_html_preserve_tags(html_content, from_code="en", to_code="zh"):
+    """
+    翻译 HTML 中的文本内容，但保留 HTML 标签
+    """
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # 遍历所有文本节点
+    for element in soup.find_all(text=True):
+        # 去掉只包含空白字符的节点
+        if element.strip():
+            translated_text = argostranslate.translate.translate(element, from_code, to_code)
+            element.replace_with(translated_text)
+
+    return str(soup)
+
 # ---------- HTML清理 ----------
 def strip_html(text):
     if not text:
@@ -68,10 +83,8 @@ for rss_url in RSS_URLS:
         else:
             content = getattr(entry, "summary", None) or getattr(entry, "description", None) or entry.title
 
-        content = strip_html(content)
-        
-        # Translate
-        translated_content = argostranslate.translate.translate(content, from_code, to_code)
+        # HTML-aware 翻译
+        translated_content = translate_html_preserve_tags(content, from_code, to_code)
 
         new_articles.append({
             "title": title,
