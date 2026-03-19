@@ -13,6 +13,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Cache processed.json
+        uses: actions/cache@v3
+        with:
+          path: processed.json
+          key: rss-processed-cache
+          restore-keys: |
+            rss-processed-cache
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
