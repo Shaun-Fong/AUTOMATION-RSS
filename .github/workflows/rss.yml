@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: pip install feedparser argostranslate bs4
 
+      - name: Install translate package
+        run: argospm install translate-en_zh
+
       - name: Run RSS Translate & Email
         env:
           RSS_URLS: ${{ vars.RSS_URLS }} #RSS地址逗号间隔
