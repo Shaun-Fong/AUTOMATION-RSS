@@ -23,7 +23,7 @@ jobs:
 
       - name: Run RSS Translate & Email
         env:
-          RSS_URLS: ${{ secrets.RSS_URLS }} #RSS地址逗号间隔
+          RSS_URLS: ${{ vars.RSS_URLS }} #RSS地址逗号间隔
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
