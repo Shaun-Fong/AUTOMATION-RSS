@@ -102,7 +102,7 @@ if new_articles:
     for art in new_articles:
         email_content += f"标题: {art['title']}\n链接: {art['link']}\n内容摘要:\n{art['translated']}\n\n{'-'*50}\n\n"
 
-    msg = MIMEText(email_content, "plain", "utf-8")
+    msg = MIMEText(email_content, "html", "utf-8")
     msg["Subject"] = EMAIL_SUBJECT_PREFIX + f"{len(new_articles)}篇新文章"
     msg["From"] = SENDER_EMAIL
     msg["To"] = RECEIVER_EMAIL
