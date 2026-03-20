@@ -16,15 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache processed.json
-        uses: actions/cache@v3
-        with:
-          path: |
-            processed.json
-            .argos_lang_installed
-            ~/.local/share/argos-translate
-          key: rss-cache-v1
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
