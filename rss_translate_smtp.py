@@ -48,10 +48,20 @@ def strip_html(text):
     return soup.get_text(separator="\n").strip()
 
 # ---------- 历史记录 ----------
-if os.path.exists(HISTORY_FILE):
-    history = set(json.load(open(HISTORY_FILE, "r", encoding="utf-8")))
-else:
-    history = set()
+HISTORY_FILE = os.getenv("HISTORY_FILE", "processed.json")
+
+def load_history():
+    if os.path.exists(HISTORY_FILE):
+        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+            return set(json.load(f))
+    return set()
+
+def save_history(history):
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(list(history), f, ensure_ascii=False, indent=2)
+
+history = load_history()
+print("当前历史记录:", len(history))
 
 from_code = "en"
 to_code = "zh"
@@ -94,7 +104,7 @@ for rss_url in RSS_URLS:
         history.add(entry.link)
 
 # ---------- 保存历史 ----------
-json.dump(list(history), open(HISTORY_FILE, "w", encoding="utf-8"))
+save_history(history)
 
 # ---------- 发送邮件 ----------
 if new_articles:
