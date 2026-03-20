@@ -42,3 +42,11 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
         run: python rss_translate_smtp.py
+        
+      - name: Commit history
+        run: |
+          git config --global user.name "bot"
+          git config --global user.email "bot@example.com"
+          git add processed.json
+          git commit -m "update history" || echo "no changes"
+          git push
