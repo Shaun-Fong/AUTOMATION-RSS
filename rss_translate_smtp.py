@@ -16,7 +16,7 @@ SMTP_SERVER = os.getenv("SMTP_SERVER")
 SMTP_PORT = int(os.getenv("SMTP_PORT", 465))
 SMTP_PASS = os.getenv("SMTP_PASS")
 RSS_URLS = [url.strip() for url in os.getenv("RSS_URLS", "").split(",") if url.strip()]
-EMAIL_SUBJECT_PREFIX = "[RSS更新] "
+EMAIL_SUBJECT_PREFIX = "[RSS订阅更新] "
 HISTORY_FILE = "processed.json"
 
 if not all([SENDER_EMAIL, SMTP_SERVER, SMTP_PASS]):
@@ -110,7 +110,7 @@ save_history(history)
 if new_articles:
     email_content = ""
     for art in new_articles:
-        email_content += f"标题: {art['title']}\n链接: {art['link']}\n内容摘要:\n{art['translated']}\n\n{'-'*50}\n\n"
+        email_content += f"标题: {art['title']}<br>链接: {art['link']}<br>内容摘要:{art['translated']}<br><br>{'-'*50}<br><br>"
 
     msg = MIMEText(email_content, "html", "utf-8")
     msg["Subject"] = EMAIL_SUBJECT_PREFIX + f"{len(new_articles)}篇新文章"
