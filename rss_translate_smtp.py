@@ -2,6 +2,7 @@ import feedparser
 import os
 import json
 import smtplib
+import re
 from email.mime.text import MIMEText
 from bs4 import BeautifulSoup
 
@@ -25,19 +26,68 @@ if not all([SENDER_EMAIL, SMTP_SERVER, SMTP_PASS]):
 if not RSS_URLS:
     raise ValueError("请在 Variables 中配置 RSS_URLS")
 
+# URL检测
+URL_PATTERN = re.compile(
+    r"(https?://[^\s]+|www\.[^\s]+)",
+    re.IGNORECASE
+)
+
+def should_translate(text):
+    """
+    判断一个文本节点是否需要翻译
+    """
+
+    text = text.strip()
+    if not text:
+        return False
+    # 跳过纯URL
+    if URL_PATTERN.fullmatch(text):
+        return False
+    # 跳过包含大量URL的文本
+    if URL_PATTERN.search(text):
+        return False
+    # 跳过太短内容
+    if len(text) <= 1:
+        return False
+    return True
+
+
 def translate_html_preserve_tags(html_content, from_code="en", to_code="zh"):
     """
-    翻译 HTML 中的文本内容，但保留 HTML 标签
+    翻译HTML文本内容
+    保留:
+    - HTML标签
+    - 图片链接
+    - 超链接
+    - URL
     """
     soup = BeautifulSoup(html_content, "html.parser")
-
-    # 遍历所有文本节点
-    for element in soup.find_all(text=True):
-        # 去掉只包含空白字符的节点
-        if element.strip():
-            translated_text = argostranslate.translate.translate(element, from_code, to_code)
-            element.replace_with(translated_text)
-
+    # 不处理这些标签里面的内容
+    skip_tags = {
+        "script",
+        "style",
+        "code",
+        "pre",
+        "img",
+        "a"
+    }
+    for element in soup.find_all(string=True):
+        parent = element.parent
+        # 父节点属于跳过标签
+        if parent and parent.name in skip_tags:
+            continue
+        text = str(element)
+        if not should_translate(text):
+            continue
+        try:
+            translated = argostranslate.translate.translate(
+                text,
+                from_code,
+                to_code
+            )
+            element.replace_with(translated)
+        except Exception as e:
+            print("翻译失败:", text[:50], e)
     return str(soup)
 
 # ---------- HTML清理 ----------
